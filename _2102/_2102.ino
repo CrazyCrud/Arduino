@@ -5,12 +5,12 @@
 #include <iterator>
 using namespace std;
 
-const int led_red = 2;
-const int led_blue = 4;
-const int led_green= 6;
+const int led_red = 11;
+const int led_blue = 10;
+const int led_green= 9;
 const int magnet_analog = 5;
 const int magnet_digital = 8;
-const int treshold_color = 60;
+const int treshold_color = 20;
 const int treshold_magnet = 30;
 const int magnet_values = 5;
 int intens_red, intens_blue, intens_green;
@@ -27,10 +27,10 @@ void setup(){
 
 void loop(){
   delay(250);
-  if(isMagnetDetected()){
+  //if(isMagnetDetected()){
     blinkLamps();
     computeIntensity();
-  }
+  //}
 }
 
 boolean isMagnetDetected(){
@@ -67,7 +67,7 @@ float roundValue(float value){
   return value<0 ? value - 0.5: value + 0.5;
 }
 
-void blinkLamps(){
+void blinkLamps(){ 
   turnOnLight(led_red);
   delay(500);
   checkSensor(led_red);
@@ -121,13 +121,13 @@ void computeIntensity(){
 }
 
 void scale(){
-    // Serial.println("Scaled Values");
+    Serial.println("Scaled Values");
     intens_red = map(intens_red, 0, 1023, 255 , 0);
-    // Serial.println(intens_red);
+    Serial.println(intens_red);
     intens_green = map(intens_green, 0, 1023, 255, 0);
-    // Serial.println(intens_green);
+    Serial.println(intens_green);
     intens_blue = map(intens_blue, 0, 1023, 255, 0);
-    // Serial.println(intens_blue);
+    Serial.println(intens_blue);
 }
 
 void defineColor(){
