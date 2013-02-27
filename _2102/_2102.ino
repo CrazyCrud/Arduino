@@ -10,6 +10,7 @@ using namespace std;
 
 Adafruit_8x8matrix matrixLeft= Adafruit_8x8matrix();
 Adafruit_8x8matrix matrixRight = Adafruit_8x8matrix();
+const int MAX_WAITTIME = 1000;
 const int led_red = 11;
 const int led_blue = 10;
 const int led_green= 9;
@@ -21,6 +22,7 @@ const int magnet_values = 5;
 String textMessage = "";
 vector<int> intens_magnet;
 int intens_red, intens_blue, intens_green, sensorV;
+unsigned long transmissionTime;
 boolean isFound = false;
 
 void setup(){
@@ -94,6 +96,10 @@ float roundValue(float value){
 }
 
 void checkSerial(){
+  byte numOfIncomingBytes = 64;
+  byte inputBuffer [numOfIncomingBytes];
+  Serial.readBytesUntil('~', inputBuffer, numOfIncomingBytes);
+  /*
   char character;
   if(Serial.available() > 0){
     textMessage = "";
@@ -102,6 +108,15 @@ void checkSerial(){
       textMessage.concat(character);
      } 
   }
+  */
+  /*
+  transmissionTime = millis();
+  while((Serial.available() < 64) && (millis() - starttime) < MAX_WAITTIME){
+    if(Serial.available() > 0){
+      
+    }
+  }
+  */
 }
 
 void computeOutput(){
