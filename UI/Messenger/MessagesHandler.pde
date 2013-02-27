@@ -26,7 +26,7 @@ class MessagesHandler
   {
     println("Write Message");
     String currentMessage = inst_redMessage.getCurrentText();
-    //String currentImage = inst_redMessage.getImage();
+    //Byte[] currentImage = inst_redMessage.getImage();
     arduino.write(currentMessage);    
   } 
   

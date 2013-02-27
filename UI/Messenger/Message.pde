@@ -38,10 +38,16 @@ class Message
   
   //Get image. First read the file so that the value is refreshed
   public JSONArray getImage()
-  {
+  {    
+    read();    
     
-    read();
-    return arr_image;
+    Byte byteArray[] = new byte[Constants.int_matrixSize];
+    for(int i = 0; i < Constants.int_matrixSize; i++)
+    {
+      byteArray[i] = arr_image[i];
+    }
+    
+    return byteArray;    
   }
   
   //Set the boolean value for a point in the image-matix.

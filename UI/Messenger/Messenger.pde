@@ -122,15 +122,23 @@ void draw(){
   playBackgroundSound();
   if(isBallFound()){
     setTextfield(true);
+    setSketchfield(true);
     computeFeedback();
   }else{
     setTextfield(false);
+    setSketchfield(false);
     displayNoConnection();
   }    
 }
 
 void setTextfield(boolean visible){
   cp5.get(Textfield.class, "").setVisible(visible);
+}
+
+void setSketchfield(boolean visible){
+ for(int i = 0; i < drawingDots.length; i++){
+  drawingDots[i].setState(visible); 
+ }
 }
 
 void computeFeedback(){
@@ -161,15 +169,15 @@ void drawBackground(){
 
 boolean isBallFound(){
   return true;
-  // TODO: 'arduino.available() > 0 muss gelöscht werden
   /*
-  if(arduino == null){
-   return false; 
-  }else if(arduino.available() > 0){
+  try{
     if(matchAll(arduinoMessage, "found") != null){
       return true;
     }
-  } 
+  }
+  catch(Exception e){
+    println("Garbage in here");
+  }
   return false; 
   */
 }
@@ -217,7 +225,6 @@ void playBackgroundSound(){
       backgroundSound.loop();
     }
   }else{
-    println("Play Background Sound (no Ball)");
     backgroundSound.pause();
     backgroundSound.rewind();
     noBall.loop();
@@ -291,9 +298,9 @@ public class Button{
             isFeedbackVisible = true;
             message_feedback = message_send;
             computeDrawing();
-          }  
+          }
+        playOneShotSound(clickSound);  
         }
-        playOneShotSound(clickSound);
         isPressed = false;
         break;
       case processing.event.MouseEvent.MOVE:
@@ -332,7 +339,7 @@ public class Dot{
  int x, y;
  int diameter;
  int id;
- boolean visible;
+ boolean visible, active;
 
 
  public Dot(int x, int y, int id){
@@ -341,12 +348,15 @@ public class Dot{
    this.id = id;
    diameter = 7;
    visible = false;
-   
+   active = false;
    app.registerDraw(this);
    app.registerMethod("mouseEvent", this);
  }
  
  void draw(){
+   if(!active){
+    return; 
+   }
    if(!visible){
      fill(255);
    }else{
@@ -356,6 +366,9 @@ public class Dot{
  }
  
  void mouseEvent(MouseEvent event){
+  if(!active){
+   return; 
+  }
   switch(event.getAction()){
     case processing.event.MouseEvent.CLICK:
       if(event.getX() > (x - diameter) && event.getX() < (x + diameter)){
@@ -367,6 +380,15 @@ public class Dot{
       break;
   }
  }
+ 
+void setState(boolean active){
+ this.active = active;
+ if(this.active){
+   
+ }else{
+   
+ }
+} 
 
 boolean isMarked(){
   return visible; 
