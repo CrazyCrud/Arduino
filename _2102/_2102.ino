@@ -19,14 +19,27 @@ const int magnet_digital = 8;
 const int treshold_color = 20;
 const int treshold_magnet = 30;
 const int magnet_values = 5;
-String textMessage = "";
+String textMessage = "Test";
 vector<int> intens_magnet;
 int intens_red, intens_blue, intens_green, sensorV;
 unsigned long transmissionTime;
+const  byte numOfIncomingBytes = 64;
+char drawingPixels [] = {
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+    1, 0, 1, 1, 1, 1, 1, 1, 
+  };
+  
 boolean isFound = false;
 
 void setup(){
   Serial.begin(9600);
+  Serial.setTimeout(8000);
   initializeIO();
   initializeMatrix();
 }
@@ -48,6 +61,7 @@ void initializeMatrix(){
 }
 
 void loop(){
+  /*
   delay(250);
   if(isMagnetDetected()){
     if(isFound){
@@ -58,6 +72,9 @@ void loop(){
     computeIntensity();
     }
   }
+  */
+  checkSerial();
+  computeOutput();
 }
 
 boolean isMagnetDetected(){
@@ -96,9 +113,8 @@ float roundValue(float value){
 }
 
 void checkSerial(){
-  byte numOfIncomingBytes = 64;
-  byte inputBuffer [numOfIncomingBytes];
-  Serial.readBytesUntil('~', inputBuffer, numOfIncomingBytes);
+  Serial.readBytesUntil('~', drawingPixels, numOfIncomingBytes);
+  
   /*
   char character;
   if(Serial.available() > 0){
@@ -108,8 +124,8 @@ void checkSerial(){
       textMessage.concat(character);
      } 
   }
-  */
-  /*
+  
+  
   transmissionTime = millis();
   while((Serial.available() < 64) && (millis() - starttime) < MAX_WAITTIME){
     if(Serial.available() > 0){
@@ -117,24 +133,52 @@ void checkSerial(){
     }
   }
   */
+  
 }
 
 void computeOutput(){
-  if(textMessage.length() < 1){
-    return;
-  }
-  int numOfPoints = (textMessage.length() * 8) + 8;
-  for (int8_t x = 7; x >= -numOfPoints; x--) 
-  {    
+  writeText();
+  writeBitmap();
+}
+  
+void writeBitmap(){
+  for(int8_t x = 7; x >= -36; x--){
     matrixLeft.clear();
     matrixRight.clear();
-    matrixLeft.setCursor(x+8,0);
-    matrixRight.setCursor(x+0,0);
-    matrixLeft.print(textMessage);
-    matrixRight.print(textMessage);
-    matrixLeft.writeDisplay();
-    matrixRight.writeDisplay();    
+    for(int i = 0; i < 8; i++)
+    {
+        for(int j = 0; j < 8; j++)
+        { 
+          if(drawingPixels[i * 8 + j] == 1)
+          {
+              matrixLeft.drawPixel(j + x + 8, i, LED_ON); 
+              matrixRight.drawPixel(j + x, i, LED_ON);
+          }
+       }
+    }
+    matrixLeft.writeDisplay(); 
+    matrixRight.writeDisplay();  
     delay(100);
+  }
+}
+
+void writeText(){
+  if(textMessage.length() > 1){
+    matrixLeft.setRotation(2);
+    matrixRight.setRotation(2);
+    int numOfPoints = (textMessage.length() * 8) + 8;
+    for (int8_t x = 7; x >= -numOfPoints; x--) 
+    {    
+      matrixLeft.clear();
+      matrixRight.clear();
+      matrixLeft.setCursor(x+8,0);
+      matrixRight.setCursor(x+0,0);
+      matrixLeft.print(textMessage);
+      matrixRight.print(textMessage);
+      matrixLeft.writeDisplay();
+      matrixRight.writeDisplay();    
+      delay(100);
+    }
   }
 }
 
