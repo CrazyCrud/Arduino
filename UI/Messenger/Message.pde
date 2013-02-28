@@ -36,16 +36,24 @@ class Message
     return string_text;
   }
   
-  //Get image. First read the file so that the value is refreshed
-  public JSONArray getImage()
+  //Returns the byte-Array for the image
+  public byte[] getImage()
   {    
+    First read the file so that the value is refreshed
     read();    
-    
-    Byte byteArray[] = new byte[Constants.int_matrixSize];
+    byte byteArray[] = new byte[Constants.int_matrixSize];
     for(int i = 0; i < Constants.int_matrixSize; i++)
     {
-      byteArray[i] = arr_image[i];
-    }
+      try
+      {
+        //Convert boolean to byte, cause the Arduino needs byte-values
+        byteArray[i] = (byte) (arr_image.getBoolean(i) ? 1 : 0);
+      } 
+      catch(Exception e)
+      {
+        handleException(e);
+      }  
+  }
     
     return byteArray;    
   }
@@ -53,7 +61,6 @@ class Message
   //Set the boolean value for a point in the image-matix.
   public void setImagePoint(int pIndex, Boolean pBool)
   {
-    // println("ImagePoint " + pIndex + ", marked: " + pBool);
     arr_image.put(pIndex, pBool);
   }
   
@@ -82,17 +89,13 @@ class Message
   private void parse()
   {    
     string_text = json_message.getString(string_textKey);
-    arr_image = json_message.getJSONArray(string_imageKey);
-    
-    // println("Text parsed: " + string_text);
-    // println("Image parsed: " + arr_image); 
+    arr_image = json_message.getJSONArray(string_imageKey);    
   }   
   
   private void load()
   {
     String[] lines = loadStrings(string_fileName);
     json_message = new JSONObject(join(lines, " ")); 
-    // println(json_message);
   }
   
   public void setText(String pText)
@@ -101,21 +104,26 @@ class Message
   }
   
   //Send Message
-  public void send(){    
-    setImagePoint(0, true);
-    json_message.put(string_imageKey, arr_image);
+  public void sendMessage(){    
     json_message.put(string_textKey, string_text);
-    
+    String lines[] = split(json_message.toString(), " ");
+    saveStrings("data\\" + string_fileName, lines);   
+  }
+  
+  //Put the json-array of the image into the json-object for the message and save the json file
+  public void sendDrawing(){
+    json_message.put(string_imageKey, arr_image);
     String lines[] = split(json_message.toString(), " ");
     saveStrings("data\\" + string_fileName, lines);    
   }
 
+  //Default handling for exceptions
   private void handleException(Exception pException)
   {
-    // println(pException);
+    println(pException);
   }  
   
-  //Create default JSON file
+  //Create default JSON file, if it's needed. Just saving time for wrting.
   private void createDefaultFile()
   {
     JSONObject json_defaultMessage = new JSONObject();  

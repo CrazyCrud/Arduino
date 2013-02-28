@@ -17,16 +17,13 @@ const int led_green= 9;
 const int magnet_analog = 5;
 const int magnet_digital = 8;
 const int treshold_color = 20;
-const int treshold_magnet = 5;
+const int treshold_magnet = 30;
 const int magnet_values = 5;
-int magnetValue;
 String textMessage = "Test";
 vector<int> intens_magnet;
 int intens_red, intens_blue, intens_green, sensorV;
 unsigned long transmissionTime;
 const  byte numOfIncomingBytes = 64;
-const  byte matrixWidth = 8;
-//char-Array needed, cause byte-array isn't accepted by the method readBytesUntil()
 char drawingPixels [] = {
     1, 0, 1, 1, 1, 1, 1, 1, 
     1, 0, 1, 1, 1, 1, 1, 1, 
@@ -37,17 +34,12 @@ char drawingPixels [] = {
     1, 0, 1, 1, 1, 1, 1, 1, 
     1, 0, 1, 1, 1, 1, 1, 1, 
   };
-
+  
 boolean isFound = false;
-char character;
-//x and y-indices for the loops in writeBitmap()
-byte yIndex, xIndex;
-//x-Position for the horizontal run of text and image (used in writeBitmap AND writeText)
-int8_t xPos;
 
 void setup(){
   Serial.begin(9600);
-  Serial.setTimeout(1000);
+  Serial.setTimeout(8000);
   initializeIO();
   initializeMatrix();
 }
@@ -69,29 +61,28 @@ void initializeMatrix(){
 }
 
 void loop(){
-  delay(100);
+  /*
+  delay(250);
   if(isMagnetDetected()){
     if(isFound){
       checkSerial();
-      notifyProcessing();
       computeOutput();
     }else {
     blinkLamps();
     computeIntensity();
     }
   }
-  /*
+  */
   checkSerial();
   computeOutput();
-  */
 }
 
 boolean isMagnetDetected(){
-  magnetValue = analogRead(magnet_analog);
+  int magnetValue = analogRead(magnet_analog);
   manageMagnetValues(magnetValue);
   magnetValue = getAvgMagnetValue();
-  Serial.print("Avg. value: ");
-  Serial.println(magnetValue);
+  // Serial.print("Avg. value: ");
+  // Serial.println(magnetValue);
   if(magnetValue < treshold_magnet){
     return true;
   }
@@ -122,26 +113,27 @@ float roundValue(float value){
 }
 
 void checkSerial(){
+  Serial.readBytesUntil('~', drawingPixels, numOfIncomingBytes);
   
-  if(Serial.available() > 0)
-  {
-    Serial.readBytesUntil('~', drawingPixels, numOfIncomingBytes);
-        
-    character = '\0';
+  /*
+  char character;
+  if(Serial.available() > 0){
     textMessage = "";
-    delay(100);
     while(Serial.available() > 0) {    
       character = Serial.read();
-      if(character != '~')
-      {
-        textMessage.concat(character);
-      }
+      textMessage.concat(character);
      } 
-  }  
-}
-
-void notifyProcessing(){
-  Serial.println("found");
+  }
+  
+  
+  transmissionTime = millis();
+  while((Serial.available() < 64) && (millis() - starttime) < MAX_WAITTIME){
+    if(Serial.available() > 0){
+      
+    }
+  }
+  */
+  
 }
 
 void computeOutput(){
@@ -150,45 +142,37 @@ void computeOutput(){
 }
   
 void writeBitmap(){
-  
-  //for-loop #1: Iterates the horizontal Position of the whole Bitmap. At beginning at the right outer of the two Matrices.
-  for(xPos = 7; xPos >= -36; xPos--){
+  for(int8_t x = 7; x >= -36; x--){
     matrixLeft.clear();
-    matrixRight.clear(); 
-    //for-loop #2: yIndex of the char-Array "drawingPixels"
-    for(yIndex = 0; yIndex < 8; yIndex++)
+    matrixRight.clear();
+    for(int i = 0; i < 8; i++)
     {
-        //for-loop #3: xIndex of the char-Array "drawingPixels"
-        for(xIndex = 0; xIndex < 8; xIndex++)
+        for(int j = 0; j < 8; j++)
         { 
-          if(drawingPixels[yIndex * 8 + xIndex] == 1)
+          if(drawingPixels[i * 8 + j] == 1)
           {
-              matrixLeft.drawPixel(xIndex + xPos + 8, yIndex, LED_ON); 
-              matrixRight.drawPixel(xIndex + xPos, yIndex, LED_ON);
+              matrixLeft.drawPixel(j + x + 8, i, LED_ON); 
+              matrixRight.drawPixel(j + x, i, LED_ON);
           }
        }
     }
-    
     matrixLeft.writeDisplay(); 
     matrixRight.writeDisplay();  
     delay(100);
   }
 }
 
-//Write (display) the current Text to the 2 Matrix-Displays
 void writeText(){
   if(textMessage.length() > 1){
     matrixLeft.setRotation(2);
     matrixRight.setRotation(2);
     int numOfPoints = (textMessage.length() * 8) + 8;
-    
-    //Iterates the horizontal Position of the whole Text. At beginning at the right outer of the two Matrices.
-    for (xPos = 7; xPos >= -numOfPoints; xPos--) 
+    for (int8_t x = 7; x >= -numOfPoints; x--) 
     {    
       matrixLeft.clear();
       matrixRight.clear();
-      matrixLeft.setCursor(xPos+8,0);
-      matrixRight.setCursor(xPos+0,0);
+      matrixLeft.setCursor(x+8,0);
+      matrixRight.setCursor(x+0,0);
       matrixLeft.print(textMessage);
       matrixRight.print(textMessage);
       matrixLeft.writeDisplay();
