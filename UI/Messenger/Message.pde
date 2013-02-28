@@ -39,7 +39,7 @@ class Message
   //Returns the byte-Array for the image
   public byte[] getImage()
   {    
-    First read the file so that the value is refreshed
+    // First read the file so that the value is refreshed
     read();    
     byte byteArray[] = new byte[Constants.int_matrixSize];
     for(int i = 0; i < Constants.int_matrixSize; i++)

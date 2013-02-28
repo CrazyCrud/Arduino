@@ -39,6 +39,7 @@ PImage background;
 PImage ballShotImg;
 Dot [] drawingDots; // Sketch field
 String arduinoMessage = "";
+String arduinoMessageSound = "";
 String textValue = "";
 final int id_sendMessageButton = 0;
 final int id_deleteMessageButton = 1;
@@ -206,8 +207,8 @@ void computeFeedback(){
 
 void controlTextInput(){
  String inputText = getText();
- if(inputText.length() > 30){
-  inputText = inputText.substring(0, 21);
+ if(inputText.length() > 15){
+  inputText = inputText.substring(0, 16);
   cp5.get(Textfield.class, "").setText(inputText);
  } 
 }
@@ -236,7 +237,8 @@ void drawBackground(){
 // The arduino sends a text message ('found') if the ball is found and the method checks if this string
 // is received
 boolean isBallFound(){
-  // return false;
+  //return false;
+  
   try{
     if(matchAll(arduinoMessage, "found") != null){
       return true;
@@ -250,8 +252,8 @@ boolean isBallFound(){
 
 void checkForFire(){
   try{
-    if(matchAll(arduinoMessage, "sound") != null){
-      arduinoMessage = "";
+    if(matchAll(arduinoMessageSound, "sound") != null){
+      arduinoMessageSound = "";
       isShot = true;
       playOneShotSound(ballShot);
     }
@@ -279,6 +281,9 @@ void updateTimerShotBall(){
 // This EventHandler catches the event when data is sent from the arduino device
 void serialEvent(Serial myPort) {
   arduinoMessage = myPort.readString();
+  if(matchAll(arduinoMessage, "sound") != null){
+    arduinoMessageSound = "sound";
+  }
   println(arduinoMessage);
 }
 

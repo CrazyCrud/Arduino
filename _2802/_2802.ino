@@ -31,7 +31,7 @@ byte yIndex, xIndex;
 //x-Position for the horizontal run of text and image (used in writeBitmap AND writeText)
 int8_t xPos;
 char character;
-String textMessage = "";
+String textMessage = "Test";
 
 /* -----------------------------------
   Variables for Color Detection
@@ -49,15 +49,17 @@ int intens_red, intens_blue, intens_green, val_lightSensor;
 const int accelX_analog = 3;
 const int accelY_analog = 2;
 const int accelZ_analog = 4;
-const int accel_treshold = 100;
+const int accel_treshold = 70;
 const int magnet_analog = 5;
 const int magnet_digital = 8;
 const int magnet_values = 5;
 int magnetValue;
 int accelValue = 0;
+int accelValue_old = 0;
 const int treshold_magnet = 20;
 vector<int> intens_magnet;
-
+int vecSize;
+boolean showStatusLed = false;
 /* -----------------------------------
   Common Variables
 */  
@@ -79,6 +81,7 @@ void initializeIO(){
   pinMode(led_red, OUTPUT);
   pinMode(led_blue, OUTPUT);
   pinMode(led_green, OUTPUT);
+  pinMode(led_status, OUTPUT);
   pinMode(magnet_digital, INPUT);
 }
 
@@ -103,14 +106,23 @@ void loop(){
   if(isMagnetDetected()){
     //check if the correct color is detected
     if(colorFound){
+      catchMagnetValues();
+      signalBallFound(true);
       checkSerial();
-      notifyProcessing();
+      catchMagnetValues();
+      notifyProcessing(true);
       computeOutput();
+      catchMagnetValues();
     }else {
       //check the color and set variable color found      
+      catchMagnetValues();
       blinkLamps();
+      catchMagnetValues();
       computeIntensity();
     }
+  }else{
+    signalBallFound(false);
+    notifyProcessing(false);
   }
   checkAccelaration();
 }
@@ -118,10 +130,11 @@ void loop(){
 //check if the magnetsensor is detecting a magnet
 boolean isMagnetDetected(){
   magnetValue = analogRead(magnet_analog);
+  Serial.println(magnetValue);
   manageMagnetValues(magnetValue);
   magnetValue = getAvgMagnetValue();
-  Serial.print("Avg. value: ");
-  Serial.println(magnetValue);
+  // Serial.print("Magnet Avg. Value: ");
+  // Serial.println(magnetValue);
   if(magnetValue < treshold_magnet){
     return true;
   }
@@ -137,10 +150,14 @@ void manageMagnetValues(int value){
   }
 }
 
+void catchMagnetValues(){
+  manageMagnetValues(analogRead(magnet_analog));
+}
+
 //Compute the average value for the intensity of the magnet sensor
 int getAvgMagnetValue(){
   float value = 0.0;
-  int vecSize = intens_magnet.size();
+  vecSize = intens_magnet.size();
   for(int i = 0; i < vecSize; i++){
     value += intens_magnet.at(i);
   }
@@ -151,6 +168,24 @@ int getAvgMagnetValue(){
 
 float roundValue(float value){
   return value<0 ? value - 0.5: value + 0.5;
+}
+
+void signalBallFound(boolean isFound){
+  if(isFound){
+    turnOnLight(led_status);
+  }else{
+    turnOffLight(led_status);
+  }
+}
+
+void signalComputingBall(){
+  if(showStatusLed){
+    turnOnLight(led_status);
+    showStatusLed = false;
+  }else{
+    turnOffLight(led_status);
+    showStatusLed = true;
+  }
 }
 
 //check if there's incoming data (a message) and save the image and text
@@ -174,26 +209,30 @@ void checkSerial(){
         textMessage.concat(character);
       }
      } 
-  }  
+  }
 }
 
 void checkAccelaration(){
   // Serial.print("X: ");
   // Serial.println(analogRead(accelX_analog));
-  int x_value = analogRead(accelX_analog);
+  accelValue_old = analogRead(accelX_analog);
   if(accelValue == 0){
-    accelValue = x_value;
+    accelValue = accelValue_old;
     return;
   }
-  if((x_value - accelValue) > accel_treshold){
+  if((accelValue_old - accelValue) > accel_treshold){
     Serial.println("sound");
   }
-  accelValue = x_value;
+  accelValue = accelValue_old;
 }
 
 
-void notifyProcessing(){
-  Serial.println("found");
+void notifyProcessing(boolean ballFound){
+  if(ballFound){
+    Serial.println("found");
+  }else{
+    Serial.println("no ball");
+  }
 }
 
 void computeOutput(){
@@ -209,6 +248,7 @@ void writeBitmap(){
     //clear all pixels
     matrixLeft.clear();
     matrixRight.clear(); 
+
     //for-loop #2: yIndex of the char-Array "drawingPixels"
     for(yIndex = 0; yIndex < matrixWidth; yIndex++)
     {
@@ -238,12 +278,12 @@ void writeText(){
     matrixLeft.setRotation(2);
     matrixRight.setRotation(2);
     
-    //compute the number of 
     int numOfPoints = (textMessage.length() * matrixWidth) + matrixWidth;
     
     //Iterates the horizontal Position of the whole Text. At beginning at the right outer of the two Matrices.
     for (xPos = 7; xPos >= -numOfPoints; xPos--) 
     {    
+      
       //clear all pixels
       matrixLeft.clear();
       matrixRight.clear();
@@ -262,8 +302,8 @@ void writeText(){
       delay(100);
     }
   }else{
-    matrixLeft.clear();
-    matrixRight.clear();
+    // matrixLeft.clear();
+    // matrixRight.clear();
   }
 }
 
